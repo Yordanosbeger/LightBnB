@@ -12,10 +12,11 @@ const pool = new Pool({
   database: 'lightbnb',
   port: 5432
 });
-pool.query(`SELECT title FROM properties LIMIT 10;`)
-.then(response =>{
-  console.log(respond);
-});
+// pool.query(`SELECT title FROM properties LIMIT 10;`)
+// .then(response =>{
+//   console.log(respond);
+// });
+
 
 
 /**
@@ -81,6 +82,7 @@ const addUser = function (user) {
  * @return {Promise<[{}]>} A promise to the reservations.
  */
 const getAllReservations = function (guest_id, limit = 10) {
+  console.log(guest_id);
   return pool
   .query(`
     SELECT reservations.id, properties.title, properties.cost_per_night,
