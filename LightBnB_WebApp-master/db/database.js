@@ -1,23 +1,16 @@
-const { response } = require("express");
 const properties = require("./json/properties.json");
 const users = require("./json/users.json");
 
 /// Users
+const { Pool } = require('pg');
 
-const {Pool} = require('pg');
 const pool = new Pool({
   user: 'labber',
-  host:'localhost',
-  password:'labber',
+  host: 'localhost',
+  password: 'labber',
   database: 'lightbnb',
   port: 5432
 });
-// pool.query(`SELECT title FROM properties LIMIT 10;`)
-// .then(response =>{
-//   console.log(respond);
-// });
-
-
 
 /**
  * Get a single user from the database given their email.
@@ -26,14 +19,14 @@ const pool = new Pool({
  */
 const getUserWithEmail = function (email) {
   return pool
-  .query('SELECT * FROM users WHERE email = $1', [email])
-  .then((result) => {
-    return result.rows[0]; // Get the first user from the result
-  })
-  .catch((err) => {
-    console.error('Error executing query:', err.message);
-    return null; 
-  });
+    .query('SELECT * FROM users WHERE email = $1', [email])
+    .then((result) => {
+      return result.rows[0]; // Get the first user from the result
+    })
+    .catch((err) => {
+      console.error('Error executing query:', err.message);
+      return null;
+    });
 };
 
 /**
@@ -42,15 +35,15 @@ const getUserWithEmail = function (email) {
  * @return {Promise<{}>} A promise to the user.
  */
 const getUserWithId = function (id) {
-   return pool
-  .query('SELECT * FROM users WHERE id = $1', [id])
-  .then((result) => {
-    return result.rows[0]; // Retrieve the first user from the result
-  })
-  .catch((err) => {
-    console.error('Error executing query:', err.message);
-    return null; 
-  });
+  return pool
+    .query('SELECT * FROM users WHERE id = $1', [id])
+    .then((result) => {
+      return result.rows[0]; // Retrieve the first user from the result
+    })
+    .catch((err) => {
+      console.error('Error executing query:', err.message);
+      return null;
+    });
 };
 
 /**
@@ -59,19 +52,18 @@ const getUserWithId = function (id) {
  * @return {Promise<{}>} A promise to the user.
  */
 const addUser = function (user) {
+  
   return pool
-    .query('INSERT INTO users (name, email, password) VALUES ($1, $2, $3) RETURNING *', [
-      user.name,
-      user.email,
-      user.password
-    ])
+    .query('INSERT INTO users (name, email, password) VALUES ($1, $2, $3) RETURNING *', [user.name, user.email, user.password])
     .then((result) => {
       return result.rows[0]; // Return the newly inserted user
     })
     .catch((err) => {
-      console.error('Error executing query:', err.message);
-      return null; // Return null if there's an error
+      console.error(err.message);
+      // Return null if there's an error
+      return null;
     });
+  //  return Promise.resolve(user);
 };
 
 /// Reservations
@@ -84,7 +76,7 @@ const addUser = function (user) {
 const getAllReservations = function (guest_id, limit = 10) {
   console.log(guest_id);
   return pool
-  .query(`
+    .query(`
     SELECT reservations.id, properties.title, properties.cost_per_night,
            reservations.start_date, AVG(rating) as average_rating
     FROM reservations
@@ -95,16 +87,14 @@ const getAllReservations = function (guest_id, limit = 10) {
     ORDER BY reservations.start_date
     LIMIT $2;
   `, [guest_id, limit])
-  .then((res) => {
-    return res.rows;
-  })
-  .catch((err) => {
-    console.error('Error executing query', err);
-    return null;
-  });
+    .then((res) => {
+      return res.rows;
+    })
+    .catch((err) => {
+      console.error('Error executing query', err);
+      return null;
+    });
 };
-
-
 
 /// Properties
 
@@ -131,29 +121,29 @@ const getAllProperties = function (options, limit = 10) {
   }
   if (options.owner_id) {
     queryParams.push(options.owner_id);
-    if (queryParams.length === 1){
-    queryString += `WHERE owner_id = $${queryParams.length} `;
-  } else{
-    queryString += `AND owner_id = $${queryParams.length}`;
+    if (queryParams.length === 1) {
+      queryString += `WHERE owner_id = $${queryParams.length} `;
+    } else {
+      queryString += `AND owner_id = $${queryParams.length}`;
+    }
   }
-}
   if (options.minimum_price_per_night && options.maximum_price_per_night) {
     queryParams.push(options.minimum_price_per_night * 100, options.maximum_price_per_night * 100);
-     if(queryParams.length === 2){
-    queryString += `WHERE minimum_price_per_night >= $${queryParams.length - 1 }AND options.maximum_price_per_night <= $${queryParams.length}`; 
-    queryString += `AND minimum_price_per_night >= $${queryParams.length - 1 }AND options.maximum_price_per_night <= $${queryParams.length} `;
+    if (queryParams.length === 2) {
+      queryString += `WHERE minimum_price_per_night >= $${queryParams.length - 1}AND options.maximum_price_per_night <= $${queryParams.length}`;
+      queryString += `AND minimum_price_per_night >= $${queryParams.length - 1}AND options.maximum_price_per_night <= $${queryParams.length} `;
+    }
   }
-}
 
-  
+
 
   if (options.minimum_rating) {
     queryParams.push(options.minimum_rating);
-    if(queryParams.length === 1){
-    queryString += `WHERE average_rating >= $${queryParams.length}`;
-  } else {
-    queryString += `AND average_rating >= $${queryParams.length}`;
-}
+    if (queryParams.length === 1) {
+      queryString += `WHERE average_rating >= $${queryParams.length}`;
+    } else {
+      queryString += `AND average_rating >= $${queryParams.length}`;
+    }
   }
 
   // 4
@@ -177,6 +167,7 @@ const getAllProperties = function (options, limit = 10) {
  * @param {{}} property An object containing all of the property details.
  * @return {Promise<{}>} A promise to the property.
  */
+
 const addProperty = function (property) {
   const queryParams = [
     property.owner_id,
@@ -211,13 +202,14 @@ const addProperty = function (property) {
       console.error('Error executing query:', err.message);
       return null;
     });
-  }
+}
 
 
-module.exports ={
+module.exports = {
   getUserWithEmail,
   getUserWithId,
   addUser,
   getAllReservations,
   getAllProperties,
-  addProperty};
+  addProperty
+};
