@@ -1,5 +1,8 @@
+const { response } = require("express");
 const properties = require("./json/properties.json");
 const users = require("./json/users.json");
+
+/// Users
 
 const {Pool} = require('pg');
 const pool = new Pool({
@@ -8,11 +11,12 @@ const pool = new Pool({
   password:'labber',
   database: 'lightbnb',
   port: 5432
-})
+});
+pool.query(`SELECT title FROM properties LIMIT 10;`)
+.then(response =>{
+  console.log(respond);
+});
 
-
-
-/// Users
 
 /**
  * Get a single user from the database given their email.
@@ -37,7 +41,7 @@ const getUserWithEmail = function (email) {
  * @return {Promise<{}>} A promise to the user.
  */
 const getUserWithId = function (id) {
-  return pool
+   return pool
   .query('SELECT * FROM users WHERE id = $1', [id])
   .then((result) => {
     return result.rows[0]; // Retrieve the first user from the result
